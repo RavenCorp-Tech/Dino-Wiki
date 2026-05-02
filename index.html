@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DinoBase — The Prehistoric Encyclopedia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- PARTICLE CANVAS -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <span class="nav-logo">⬡</span>
+    <span class="nav-title">DINO<em>BASE</em></span>
+  </div>
+  <div class="nav-links">
+    <a href="#home" class="nav-link active" data-page="home">Home</a>
+    <a href="#encyclopedia" class="nav-link" data-page="encyclopedia">Encyclopedia</a>
+    <a href="#timeline" class="nav-link" data-page="timeline">Timeline</a>
+    <a href="#map" class="nav-link" data-page="map">World Map</a>
+    <a href="#compare" class="nav-link" data-page="compare">Compare</a>
+    <a href="#about" class="nav-link" data-page="about">About</a>
+  </div>
+  <div class="nav-search-trigger" id="searchTrigger">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+  </div>
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search dinosaurs, periods, classifications..." autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+  <button class="search-close" id="searchClose">✕</button>
+</div>
+
+<!-- MOBILE NAV DRAWER -->
+<div class="nav-drawer" id="navDrawer">
+  <a href="#home" class="drawer-link" data-page="home">Home</a>
+  <a href="#encyclopedia" class="drawer-link" data-page="encyclopedia">Encyclopedia</a>
+  <a href="#timeline" class="drawer-link" data-page="timeline">Timeline</a>
+  <a href="#map" class="drawer-link" data-page="map">World Map</a>
+  <a href="#compare" class="drawer-link" data-page="compare">Compare</a>
+  <a href="#about" class="drawer-link" data-page="about">About</a>
+</div>
+
+<!-- ═══════════════════════════════ HOME PAGE ═══════════════════════════════ -->
+<section class="page active" id="page-home">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-bg">
+      <div class="hero-layer layer-1"></div>
+      <div class="hero-layer layer-2"></div>
+      <div class="fog-container">
+        <div class="fog fog-1"></div>
+        <div class="fog fog-2"></div>
+        <div class="fog fog-3"></div>
+      </div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-line"></span>
+        <span>The Complete Prehistoric Record</span>
+        <span class="eyebrow-line"></span>
+      </div>
+      <h1 class="hero-title">
+        <span class="title-line-1">DINO</span>
+        <span class="title-line-2">BASE</span>
+      </h1>
+      <p class="hero-subtitle">From the Triassic to the mass extinction — every species, every era, every fossil. The world's most comprehensive digital dinosaur encyclopedia.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="stat-number" data-target="24">0</span>
+          <span class="stat-label">Species Documented</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="stat-number" data-target="3">0</span>
+          <span class="stat-label">Prehistoric Eras</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="stat-number" data-target="7">0</span>
+          <span class="stat-label">Continents Mapped</span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="navigateTo('encyclopedia')">Explore Encyclopedia</button>
+        <button class="btn-ghost" onclick="navigateTo('timeline')">View Timeline</button>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>SCROLL</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+
+  <!-- FEATURED DINOSAURS -->
+  <div class="home-section">
+    <div class="section-header">
+      <div class="section-label">Featured Species</div>
+      <h2 class="section-title">Apex Predators & Giants</h2>
+      <p class="section-desc">The most formidable creatures to ever walk the Earth</p>
+    </div>
+    <div class="featured-grid" id="featuredGrid"></div>
+    <div class="section-action">
+      <button class="btn-outline" onclick="navigateTo('encyclopedia')">View All Species →</button>
+    </div>
+  </div>
+
+  <!-- ERA PREVIEW -->
+  <div class="home-section era-section">
+    <div class="section-header">
+      <div class="section-label">Prehistoric Eras</div>
+      <h2 class="section-title">252 Million Years of History</h2>
+    </div>
+    <div class="era-cards">
+      <div class="era-card triassic" onclick="navigateTo('timeline')">
+        <div class="era-bg"></div>
+        <div class="era-content">
+          <div class="era-period">252 – 201 Ma</div>
+          <h3 class="era-name">Triassic</h3>
+          <p class="era-desc">The dawn of the dinosaurs. A supercontinent world where life rebounded from the Permian extinction.</p>
+          <div class="era-stats-row">
+            <span>🦕 First dinosaurs appear</span>
+            <span>🌍 Pangaea intact</span>
+          </div>
+        </div>
+      </div>
+      <div class="era-card jurassic" onclick="navigateTo('timeline')">
+        <div class="era-bg"></div>
+        <div class="era-content">
+          <div class="era-period">201 – 145 Ma</div>
+          <h3 class="era-name">Jurassic</h3>
+          <p class="era-desc">The golden age. Sauropods dominate as the largest creatures ever to walk the Earth emerge.</p>
+          <div class="era-stats-row">
+            <span>🦴 Sauropod giants</span>
+            <span>🌿 Lush jungles</span>
+          </div>
+        </div>
+      </div>
+      <div class="era-card cretaceous" onclick="navigateTo('timeline')">
+        <div class="era-bg"></div>
+        <div class="era-content">
+          <div class="era-period">145 – 66 Ma</div>
+          <h3 class="era-name">Cretaceous</h3>
+          <p class="era-desc">The final chapter. T-Rex and Triceratops clash until the asteroid ends 165 million years of dominance.</p>
+          <div class="era-stats-row">
+            <span>⚡ T-Rex apex</span>
+            <span>☄️ Mass extinction</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK FACTS TICKER -->
+  <div class="facts-ticker">
+    <div class="ticker-label">PALEONTOLOGY FACTS</div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="tickerContent"></div>
+    </div>
+  </div>
+
+  <!-- DIET BREAKDOWN -->
+  <div class="home-section">
+    <div class="section-header">
+      <div class="section-label">By Diet</div>
+      <h2 class="section-title">The Food Web of the Mesozoic</h2>
+    </div>
+    <div class="diet-grid">
+      <div class="diet-card carnivore" onclick="filterByDiet('carnivore')">
+        <div class="diet-icon">🥩</div>
+        <div class="diet-name">Carnivores</div>
+        <div class="diet-count" id="carnivoreCount">—</div>
+        <div class="diet-desc">Apex hunters of the Mesozoic</div>
+      </div>
+      <div class="diet-card herbivore" onclick="filterByDiet('herbivore')">
+        <div class="diet-icon">🌿</div>
+        <div class="diet-name">Herbivores</div>
+        <div class="diet-count" id="herbivoreCount">—</div>
+        <div class="diet-desc">Giants that ruled by size</div>
+      </div>
+      <div class="diet-card omnivore" onclick="filterByDiet('omnivore')">
+        <div class="diet-icon">⚖️</div>
+        <div class="diet-name">Omnivores</div>
+        <div class="diet-count" id="omnivoreCount">—</div>
+        <div class="diet-desc">Opportunistic survivors</div>
+      </div>
+      <div class="diet-card piscivore" onclick="filterByDiet('piscivore')">
+        <div class="diet-icon">🐟</div>
+        <div class="diet-name">Piscivores</div>
+        <div class="diet-count" id="piscivoreCount">—</div>
+        <div class="diet-desc">Masters of ancient waterways</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ENCYCLOPEDIA PAGE ═══════════════════════════ -->
+<section class="page" id="page-encyclopedia">
+  <div class="page-hero mini-hero">
+    <div class="mini-hero-bg"></div>
+    <div class="mini-hero-content">
+      <div class="section-label">Complete Database</div>
+      <h1 class="page-title">Dinosaur Encyclopedia</h1>
+      <p>Every documented species, classified and catalogued</p>
+    </div>
+  </div>
+
+  <div class="encyclopedia-layout">
+    <!-- FILTER SIDEBAR -->
+    <aside class="filter-sidebar" id="filterSidebar">
+      <div class="filter-header">
+        <h3>Filter Species</h3>
+        <button class="filter-reset" id="filterReset">Reset All</button>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Period</div>
+        <label class="filter-option"><input type="checkbox" name="period" value="triassic"> <span>Triassic</span> <span class="filter-count"></span></label>
+        <label class="filter-option"><input type="checkbox" name="period" value="jurassic"> <span>Jurassic</span> <span class="filter-count"></span></label>
+        <label class="filter-option"><input type="checkbox" name="period" value="cretaceous"> <span>Cretaceous</span> <span class="filter-count"></span></label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Diet</div>
+        <label class="filter-option"><input type="checkbox" name="diet" value="carnivore"> <span>Carnivore</span></label>
+        <label class="filter-option"><input type="checkbox" name="diet" value="herbivore"> <span>Herbivore</span></label>
+        <label class="filter-option"><input type="checkbox" name="diet" value="omnivore"> <span>Omnivore</span></label>
+        <label class="filter-option"><input type="checkbox" name="diet" value="piscivore"> <span>Piscivore</span></label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Classification</div>
+        <label class="filter-option"><input type="checkbox" name="classification" value="theropod"> <span>Theropod</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="sauropod"> <span>Sauropod</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="ornithopod"> <span>Ornithopod</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="ceratopsian"> <span>Ceratopsian</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="ankylosaur"> <span>Ankylosaur</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="stegosaur"> <span>Stegosaur</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="pterosaur"> <span>Pterosaur</span></label>
+        <label class="filter-option"><input type="checkbox" name="classification" value="spinosaur"> <span>Spinosaur</span></label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Size</div>
+        <label class="filter-option"><input type="checkbox" name="size" value="small"> <span>Small (&lt;5m)</span></label>
+        <label class="filter-option"><input type="checkbox" name="size" value="medium"> <span>Medium (5–15m)</span></label>
+        <label class="filter-option"><input type="checkbox" name="size" value="large"> <span>Large (&gt;15m)</span></label>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title">Sort By</div>
+        <select class="filter-select" id="sortSelect">
+          <option value="name">Name (A–Z)</option>
+          <option value="period">Period</option>
+          <option value="length">Size (Largest)</option>
+          <option value="weight">Weight (Heaviest)</option>
+        </select>
+      </div>
+    </aside>
+
+    <!-- DINO GRID -->
+    <div class="dino-grid-area">
+      <div class="grid-controls">
+        <div class="results-count" id="resultsCount">Loading...</div>
+        <div class="view-toggle">
+          <button class="view-btn active" id="gridView" title="Grid view">⊞</button>
+          <button class="view-btn" id="listView" title="List view">☰</button>
+        </div>
+      </div>
+      <div class="dino-grid" id="dinoGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ DETAIL PAGE ═══════════════════════════════ -->
+<section class="page" id="page-detail">
+  <div class="detail-container" id="detailContainer">
+    <!-- Dynamically rendered -->
+  </div>
+</section>
+
+<!-- ═══════════════════════════ TIMELINE PAGE ═══════════════════════════════ -->
+<section class="page" id="page-timeline">
+  <div class="page-hero mini-hero">
+    <div class="mini-hero-bg"></div>
+    <div class="mini-hero-content">
+      <div class="section-label">252 – 66 Million Years Ago</div>
+      <h1 class="page-title">Prehistoric Timeline</h1>
+      <p>The complete history of the Mesozoic Era</p>
+    </div>
+  </div>
+
+  <div class="timeline-container">
+    <div class="timeline-spine"></div>
+    <div class="timeline-content" id="timelineContent">
+      <!-- Dynamically rendered -->
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ MAP PAGE ═════════════════════════════════ -->
+<section class="page" id="page-map">
+  <div class="page-hero mini-hero">
+    <div class="mini-hero-bg"></div>
+    <div class="mini-hero-content">
+      <div class="section-label">Global Fossil Record</div>
+      <h1 class="page-title">World Fossil Map</h1>
+      <p>Discover where ancient giants once roamed</p>
+    </div>
+  </div>
+
+  <div class="map-layout">
+    <div class="map-controls">
+      <div class="map-filter-group">
+        <span class="map-filter-label">Filter by Period:</span>
+        <button class="map-filter-btn active" data-period="all">All Eras</button>
+        <button class="map-filter-btn" data-period="triassic">Triassic</button>
+        <button class="map-filter-btn" data-period="jurassic">Jurassic</button>
+        <button class="map-filter-btn" data-period="cretaceous">Cretaceous</button>
+      </div>
+    </div>
+    <div class="map-wrapper">
+      <div class="world-map" id="worldMap">
+        <!-- SVG World Map -->
+        <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" class="map-svg" id="mapSvg">
+          <!-- Simplified continents -->
+          <!-- North America -->
+          <path class="continent" d="M 80 80 L 200 70 L 280 90 L 310 150 L 300 220 L 260 280 L 220 310 L 180 340 L 150 310 L 120 270 L 90 200 L 70 140 Z" data-continent="north-america" fill="#1a2a1a"/>
+          <!-- South America -->
+          <path class="continent" d="M 180 340 L 230 340 L 270 380 L 280 440 L 260 500 L 230 530 L 200 520 L 170 490 L 160 440 L 165 390 Z" data-continent="south-america" fill="#1a2a1a"/>
+          <!-- Europe -->
+          <path class="continent" d="M 430 60 L 510 50 L 560 70 L 570 110 L 540 130 L 500 140 L 460 130 L 430 110 Z" data-continent="europe" fill="#1a2a1a"/>
+          <!-- Africa -->
+          <path class="continent" d="M 450 150 L 540 140 L 580 160 L 590 230 L 570 320 L 540 400 L 500 440 L 460 430 L 430 380 L 420 300 L 430 220 Z" data-continent="africa" fill="#1a2a1a"/>
+          <!-- Asia -->
+          <path class="continent" d="M 560 50 L 750 40 L 900 60 L 950 100 L 930 180 L 880 230 L 800 250 L 720 240 L 650 200 L 600 170 L 560 130 Z" data-continent="asia" fill="#1a2a1a"/>
+          <!-- Australia -->
+          <path class="continent" d="M 850 320 L 980 310 L 1030 350 L 1020 420 L 970 450 L 900 440 L 860 400 L 840 360 Z" data-continent="australia" fill="#1a2a1a"/>
+          <!-- Fossil markers rendered by JS -->
+          <g id="fossilMarkers"></g>
+        </svg>
+        <div class="map-tooltip" id="mapTooltip"></div>
+      </div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item triassic-dot"><span class="legend-dot"></span>Triassic</div>
+      <div class="legend-item jurassic-dot"><span class="legend-dot"></span>Jurassic</div>
+      <div class="legend-item cretaceous-dot"><span class="legend-dot"></span>Cretaceous</div>
+    </div>
+    <div class="map-species-panel" id="mapSpeciesPanel">
+      <h3>Fossils Found Here</h3>
+      <div class="map-species-list" id="mapSpeciesList"><p class="map-hint">Click a marker to see species found at that location</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ COMPARE PAGE ═══════════════════════════════ -->
+<section class="page" id="page-compare">
+  <div class="page-hero mini-hero">
+    <div class="mini-hero-bg"></div>
+    <div class="mini-hero-content">
+      <div class="section-label">Head-to-Head</div>
+      <h1 class="page-title">Dinosaur Comparison</h1>
+      <p>Stack species side by side across every metric</p>
+    </div>
+  </div>
+
+  <div class="compare-container">
+    <div class="compare-selectors">
+      <div class="compare-slot" id="slot1">
+        <div class="slot-placeholder">
+          <span>+</span>
+          <p>Select Dinosaur A</p>
+          <select class="dino-selector" id="selector1">
+            <option value="">Choose a dinosaur...</option>
+          </select>
+        </div>
+      </div>
+      <div class="compare-vs">VS</div>
+      <div class="compare-slot" id="slot2">
+        <div class="slot-placeholder">
+          <span>+</span>
+          <p>Select Dinosaur B</p>
+          <select class="dino-selector" id="selector2">
+            <option value="">Choose a dinosaur...</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-result" id="compareResult" style="display:none">
+      <div class="compare-cards-row" id="compareCardsRow"></div>
+      <div class="compare-stats-table" id="compareStatsTable"></div>
+      <div class="compare-winner" id="compareWinner"></div>
+    </div>
+
+    <div class="compare-empty" id="compareEmpty">
+      <p>Select two dinosaurs above to begin the comparison</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ ABOUT PAGE ═════════════════════════════════ -->
+<section class="page" id="page-about">
+  <div class="page-hero mini-hero">
+    <div class="mini-hero-bg"></div>
+    <div class="mini-hero-content">
+      <div class="section-label">Education & Mission</div>
+      <h1 class="page-title">About DinoBase</h1>
+    </div>
+  </div>
+
+  <div class="about-container">
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="about-icon">🦴</div>
+        <h3>Our Mission</h3>
+        <p>DinoBase is a passion project dedicated to making paleontology accessible to everyone — from curious children to serious researchers. Every species is documented with scientific accuracy.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🔬</div>
+        <h3>Scientific Accuracy</h3>
+        <p>All data is sourced from peer-reviewed paleontological research. We include uncertainty ranges where exact measurements are debated among scientists.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">🌍</div>
+        <h3>Global Coverage</h3>
+        <p>Fossil discoveries from every continent are mapped and documented, reflecting the truly global nature of the prehistoric world.</p>
+      </div>
+      <div class="about-card">
+        <div class="about-icon">📚</div>
+        <h3>Continuous Updates</h3>
+        <p>Paleontology is a living science. DinoBase is updated as new discoveries rewrite what we know about the Mesozoic Era.</p>
+      </div>
+    </div>
+
+    <div class="classification-guide">
+      <h2>Dinosaur Classification Guide</h2>
+      <div class="clade-tree">
+        <div class="clade-root">Dinosauria</div>
+        <div class="clade-branches">
+          <div class="clade-branch">
+            <div class="clade-node saurischia">Saurischia</div>
+            <div class="clade-children">
+              <div class="clade-leaf theropod">Theropoda<br><small>T-Rex, Velociraptor, Spinosaurus</small></div>
+              <div class="clade-leaf sauropoda">Sauropodomorpha<br><small>Brachiosaurus, Diplodocus</small></div>
+            </div>
+          </div>
+          <div class="clade-branch">
+            <div class="clade-node ornithischia">Ornithischia</div>
+            <div class="clade-children">
+              <div class="clade-leaf ceratopsian">Ceratopsia<br><small>Triceratops, Protoceratops</small></div>
+              <div class="clade-leaf ankylosaur">Ankylosauria<br><small>Ankylosaurus, Stegosaurus</small></div>
+              <div class="clade-leaf ornithopod">Ornithopoda<br><small>Iguanodon, Hadrosaurs</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glossary">
+      <h2>Paleontology Glossary</h2>
+      <div class="glossary-grid" id="glossaryGrid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DETAIL MODAL OVERLAY -->
+<div class="detail-overlay" id="detailOverlay"></div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <span class="nav-logo">⬡</span>
+      <span class="nav-title">DINO<em>BASE</em></span>
+    </div>
+    <p class="footer-tagline">The Complete Prehistoric Record</p>
+    <div class="footer-links">
+      <a onclick="navigateTo('home')">Home</a>
+      <a onclick="navigateTo('encyclopedia')">Encyclopedia</a>
+      <a onclick="navigateTo('timeline')">Timeline</a>
+      <a onclick="navigateTo('compare')">Compare</a>
+    </div>
+    <p class="footer-copy">© 2026 DinoBase — Paleontological data compiled for educational purposes.</p>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
