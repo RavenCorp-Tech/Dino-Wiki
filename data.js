@@ -1083,3 +1083,44 @@ DINOBASE.getBySize = (sizeCategory) => (DINOBASE.indexes?.bySize?.[sizeCategory]
 
 // Build derived fields + indexes on load
 DINOBASE.reindex();
+
+// ═══════════════════════════════════════════════════════════
+// HELPER FUNCTIONS (REQUIRED FOR app.js)
+// ═══════════════════════════════════════════════════════════
+
+DINOBASE.getFeatured = function () {
+  return this.dinosaurs.filter(d => d.featured);
+};
+
+DINOBASE.getById = function (id) {
+  return this.dinosaurs.find(d => d.id === id);
+};
+
+DINOBASE.getByPeriod = function (period) {
+  return this.dinosaurs.filter(d => d.period === period);
+};
+
+DINOBASE.getSizeCategory = function (dino) {
+  const length = dino?.measurements?.length?.value || 0;
+
+  if (length < 5) return "small";
+  if (length < 15) return "medium";
+  return "large";
+};
+
+DINOBASE.formatLength = function (value) {
+  if (!value) return "N/A";
+  return value + " m";
+};
+
+DINOBASE.formatWeight = function (value) {
+  if (!value) return "N/A";
+  return value + " kg";
+};
+
+DINOBASE.reindex = function () {
+  this.index = {};
+  this.dinosaurs.forEach(d => {
+    this.index[d.id] = d;
+  });
+};

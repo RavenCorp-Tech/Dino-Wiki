@@ -979,3 +979,5 @@ document.getElementById("filterSearch")?.addEventListener("input", e => {
 
   renderDinosaurs(filtered);
 });
+
+document.addEventListener("DOMContentLoaded", init);
