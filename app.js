@@ -917,5 +917,65 @@
   window.navigateTo = navigateTo;
   window.filterByDiet = filterByDiet;
 
-  document.addEventListener("DOMContentLoaded", init);
-})();
+  document.addEventListener("DOMContentLoaded", () => {
+  renderDinosaurs(DINOBASE.dinosaurs);
+});
+
+function renderDinosaurs(data) {
+  const grid = document.getElementById("dinoGrid");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  data.forEach(dino => {
+    const card = document.createElement("div");
+    card.className = "dino-card";
+
+    card.innerHTML = `
+      <h3>${dino.name.common}</h3>
+      <p>${dino.name.scientific}</p>
+      <p>${dino.period} • ${dino.diet}</p>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+function navigateTo(page) {
+  document.querySelectorAll(".page").forEach(p => {
+    p.classList.remove("active");
+  });
+
+  const target = document.getElementById("page-" + page);
+  if (target) target.classList.add("active");
+}
+
+function renderTimeline() {
+  const container = document.getElementById("timelineContent");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  Object.entries(DINOBASE.periods).forEach(([key, period]) => {
+    const section = document.createElement("div");
+
+    section.innerHTML = `
+      <h2>${period.label}</h2>
+      <p>${period.description}</p>
+    `;
+
+    container.appendChild(section);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", renderTimeline);
+
+document.getElementById("filterSearch")?.addEventListener("input", e => {
+  const value = e.target.value.toLowerCase();
+
+  const filtered = DINOBASE.dinosaurs.filter(d =>
+    d.name.common.toLowerCase().includes(value)
+  );
+
+  renderDinosaurs(filtered);
+});
