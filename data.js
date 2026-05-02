@@ -4,8 +4,29 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 const DINOBASE = {
-  version: "1.0.0",
-  lastUpdated: "2026",
+  version: "2.0.0",
+  schemaVersion: 1,
+  lastUpdated: "2026-05-02",
+
+  // ─── DATA MODEL (designed to scale to 100s+ entries) ─────────────────
+  schema: {
+    dinosaur: {
+      required: ["id", "name", "period", "diet", "size", "habitat", "classification", "facts"],
+      notes: {
+        name: "Use {scientific, common}.",
+        period: "One of triassic | jurassic | cretaceous.",
+        diet: "One of carnivore | herbivore | omnivore | piscivore.",
+        size: "Derived from measurements; includes {category, lengthM, heightM, weightKg}.",
+        facts: "Array of short fact strings for the species card/detail view."
+      }
+    }
+  },
+
+  enums: {
+    periods: ["triassic", "jurassic", "cretaceous"],
+    diets: ["carnivore", "herbivore", "omnivore", "piscivore"],
+    sizeCategories: ["small", "medium", "large"]
+  },
 
   // ─── CLASSIFICATION TAXONOMY ───────────────────────────────────────────
   taxonomy: {
@@ -151,7 +172,7 @@ const DINOBASE = {
       },
       fossilLocations: ["hell-creek"],
       predators: [],
-      prey: ["triceratops", "edmontosaurus", "pachycephalosaurus"],
+      prey: ["triceratops"],
       funFacts: [
         "T-Rex had the most powerful bite of any land animal ever — estimated at 57,000 Newtons.",
         "Its arms, though tiny, could lift up to 200 kg each.",
@@ -281,7 +302,7 @@ const DINOBASE = {
         location: "Djadochta Formation, Mongolia"
       },
       fossilLocations: ["gobi"],
-      predators: ["tarbosaurus"],
+      predators: [],
       prey: ["protoceratops"],
       funFacts: [
         "Movie Velociraptors are actually based on Deinonychus — real Velociraptors were turkey-sized.",
@@ -367,7 +388,7 @@ const DINOBASE = {
         location: "Morrison Formation, Colorado, USA"
       },
       fossilLocations: ["morrison"],
-      predators: ["allosaurus", "ceratosaurus"],
+      predators: ["allosaurus"],
       prey: [],
       funFacts: [
         "Stegosaurus had a brain the size of a walnut — one of the smallest brain-to-body ratios of any dinosaur.",
@@ -511,47 +532,6 @@ const DINOBASE = {
       color: "#7a3a20"
     },
     {
-      id: "pteranodon",
-      name: { scientific: "Pteranodon longiceps", common: "Pteranodon" },
-      pronunciation: "teh-RAN-oh-don",
-      meaningOfName: "Toothless Wing",
-      period: "cretaceous",
-      subPeriod: "Late Cretaceous",
-      mya: { start: 86, end: 84 },
-      diet: "piscivore",
-      classification: "pterosaur",
-      subclassification: "Pteranodontidae",
-      measurements: {
-        length: { value: 1.8, unit: "m", notes: "Body only" },
-        height: { value: 2, unit: "m", notes: "Standing" },
-        weight: { value: 20, unit: "kg", notes: "15–25 kg" },
-        speed: { value: 50, unit: "km/h", notes: "Gliding speed estimate; wingspan up to 7m" }
-      },
-      behavior: "Soaring over the Western Interior Seaway. Dove into water like a modern gannet to catch fish. Likely had a throat pouch similar to a pelican. Technically a pterosaur, not a dinosaur.",
-      habitat: "Coastal cliffs and open ocean of the Western Interior Seaway, North America",
-      locomotion: "flying (quadrupedal takeoff)",
-      socialBehavior: "Likely colonial nesting",
-      discovery: {
-        discoveredBy: "Othniel Charles Marsh",
-        year: 1876,
-        location: "Smoky Hill Chalk, Kansas, USA"
-      },
-      fossilLocations: ["hell-creek"],
-      predators: ["mosasaurs"],
-      prey: [],
-      funFacts: [
-        "Pteranodon is technically NOT a dinosaur — it's a pterosaur, a related flying reptile.",
-        "Its crest was likely used for sexual display and could be larger than its entire body.",
-        "With a wingspan of up to 7 metres, it was one of the largest flying animals.",
-        "Pteranodon had no teeth — it swallowed fish whole.",
-        "Over 1,200 Pteranodon specimens have been collected, making it one of the best-studied pterosaurs."
-      ],
-      notableSpecimens: [],
-      featured: false,
-      emoji: "🦅",
-      color: "#4a2a8b"
-    },
-    {
       id: "giganotosaurus",
       name: { scientific: "Giganotosaurus carolinii", common: "Giganotosaurus" },
       pronunciation: "jy-ga-NO-to-SOR-us",
@@ -595,47 +575,6 @@ const DINOBASE = {
       color: "#8b4020"
     },
     {
-      id: "pachycephalosaurus",
-      name: { scientific: "Pachycephalosaurus wyomingensis", common: "Pachycephalosaurus" },
-      pronunciation: "pak-ee-SEF-ah-lo-SOR-us",
-      meaningOfName: "Thick-Headed Lizard",
-      period: "cretaceous",
-      subPeriod: "Late Cretaceous",
-      mya: { start: 70, end: 66 },
-      diet: "omnivore",
-      classification: "ornithopod",
-      subclassification: "Pachycephalosauridae",
-      measurements: {
-        length: { value: 4.5, unit: "m", notes: "4–5m" },
-        height: { value: 1.8, unit: "m", notes: "Bipedal" },
-        weight: { value: 450, unit: "kg", notes: "~450 kg" },
-        speed: { value: 35, unit: "km/h", notes: "Estimated" }
-      },
-      behavior: "Used its thick dome skull for head-butting rivals during mating season, similar to modern bighorn sheep. Omnivorous, eating leaves, seeds, and possibly insects.",
-      habitat: "Forests and highlands of Late Cretaceous North America",
-      locomotion: "bipedal",
-      socialBehavior: "Seasonal competition for mates",
-      discovery: {
-        discoveredBy: "Donald Baird & John Horner",
-        year: 1943,
-        location: "Lance Formation, Wyoming, USA"
-      },
-      fossilLocations: ["hell-creek"],
-      predators: ["tyrannosaurus-rex"],
-      prey: [],
-      funFacts: [
-        "Its skull dome was up to 25cm thick — reinforced like a natural crash helmet.",
-        "Some scientists debate whether it head-butted or flank-butted rivals.",
-        "No complete skeleton has ever been found — only skulls and fragments.",
-        "The dome increases in thickness as the animal ages.",
-        "Young Pachycephalosaurus may have looked like completely different species (Stygimoloch)."
-      ],
-      notableSpecimens: [],
-      featured: false,
-      emoji: "💀",
-      color: "#6b5a3a"
-    },
-    {
       id: "iguanodon",
       name: { scientific: "Iguanodon bernissartensis", common: "Iguanodon" },
       pronunciation: "ig-WAN-oh-don",
@@ -661,7 +600,7 @@ const DINOBASE = {
         year: 1822,
         location: "Sussex, England"
       },
-      fossilLocations: ["solnhofen"],
+      fossilLocations: [],
       predators: [],
       prey: [],
       funFacts: [
@@ -761,47 +700,6 @@ const DINOBASE = {
       color: "#5a4a3a"
     },
     {
-      id: "therizinosaurus",
-      name: { scientific: "Therizinosaurus cheloniformis", common: "Therizinosaurus" },
-      pronunciation: "theh-RIZ-ee-no-SOR-us",
-      meaningOfName: "Scythe Lizard",
-      period: "cretaceous",
-      subPeriod: "Late Cretaceous",
-      mya: { start: 70, end: 65 },
-      diet: "herbivore",
-      classification: "theropod",
-      subclassification: "Therizinosauria",
-      measurements: {
-        length: { value: 10, unit: "m", notes: "9–10m" },
-        height: { value: 5, unit: "m", notes: "Tall upright posture" },
-        weight: { value: 5000, unit: "kg", notes: "~5,000 kg" },
-        speed: { value: 10, unit: "km/h", notes: "Slow, large animal" }
-      },
-      behavior: "The most bizarre-looking dinosaur. A theropod that evolved to be herbivorous, with enormous scythe-like claws up to 1 metre long used to pull down branches. Pot-bellied to digest large quantities of plant matter.",
-      habitat: "Forests of Late Cretaceous Asia",
-      locomotion: "bipedal",
-      socialBehavior: "Unknown",
-      discovery: {
-        discoveredBy: "Maleev",
-        year: 1954,
-        location: "Nemegt Formation, Mongolia"
-      },
-      fossilLocations: ["gobi"],
-      predators: ["tarbosaurus"],
-      prey: [],
-      funFacts: [
-        "Therizinosaurus had the longest claws of any known animal — up to 1 metre long.",
-        "Despite being a theropod (cousin of T-Rex), it was a vegetarian.",
-        "Its claws were originally thought to belong to a giant turtle when first discovered.",
-        "It had a pot-belly to house its enormous digestive system for plant processing.",
-        "Its exact appearance is still debated — only partial remains are known."
-      ],
-      notableSpecimens: [],
-      featured: false,
-      emoji: "🌸",
-      color: "#6b3a8b"
-    },
-    {
       id: "parasaurolophus",
       name: { scientific: "Parasaurolophus walkeri", common: "Parasaurolophus" },
       pronunciation: "par-ah-SOR-oh-LO-fus",
@@ -827,7 +725,7 @@ const DINOBASE = {
         year: 1922,
         location: "Dinosaur Park Formation, Alberta, Canada"
       },
-      fossilLocations: ["hell-creek"],
+      fossilLocations: [],
       predators: ["tyrannosaurus-rex"],
       prey: [],
       funFacts: [
@@ -995,7 +893,7 @@ const DINOBASE = {
         year: 1991,
         location: "Ischigualasto Formation, Argentina"
       },
-      fossilLocations: ["patagonia"],
+      fossilLocations: [],
       predators: [],
       prey: [],
       funFacts: [
@@ -1013,104 +911,175 @@ const DINOBASE = {
       color: "#c8743a"
     },
     {
-      id: "coelophysis",
-      name: { scientific: "Coelophysis bauri", common: "Coelophysis" },
-      pronunciation: "see-lo-FY-sis",
-      meaningOfName: "Hollow Form",
-      period: "triassic",
-      subPeriod: "Late Triassic",
-      mya: { start: 216, end: 203 },
+      id: "archaeopteryx",
+      name: { scientific: "Archaeopteryx lithographica", common: "Archaeopteryx" },
+      pronunciation: "ar-kee-OP-ter-iks",
+      meaningOfName: "Ancient Wing",
+      period: "jurassic",
+      subPeriod: "Late Jurassic",
+      mya: { start: 150, end: 148 },
       diet: "carnivore",
       classification: "theropod",
-      subclassification: "Coelophysidae",
+      subclassification: "Avialae",
       measurements: {
-        length: { value: 2.8, unit: "m", notes: "2.5–3m" },
-        height: { value: 1, unit: "m", notes: "Light build" },
-        weight: { value: 20, unit: "kg", notes: "~15–20 kg" },
-        speed: { value: 40, unit: "km/h", notes: "Fast, agile predator" }
+        length: { value: 0.5, unit: "m", notes: "Roughly crow-sized" },
+        height: { value: 0.2, unit: "m", notes: "Standing height estimate" },
+        weight: { value: 1, unit: "kg", notes: "Estimates vary; around ~1 kg" },
+        speed: { value: 25, unit: "km/h", notes: "Short flights/glides; uncertain" }
       },
-      behavior: "Pack hunting, lightly built early predator. Evidence of cannibalism during droughts. One of the earliest well-known dinosaurs with hundreds of specimens found together at Ghost Ranch.",
-      habitat: "Semi-arid riverine environments of Late Triassic North America",
-      locomotion: "bipedal",
-      socialBehavior: "Pack hunting and possible cannibalism under stress",
+      behavior: "Early bird-like dinosaur. Likely capable of short powered flights or gliding. Feathers provided insulation and aerodynamic surfaces.",
+      habitat: "Subtropical island lagoons of Late Jurassic Europe",
+      locomotion: "flying (short flights/gliding)",
+      socialBehavior: "Unknown",
       discovery: {
-        discoveredBy: "Edward Drinker Cope",
-        year: 1887,
-        location: "New Mexico, USA"
+        discoveredBy: "Hermann von Meyer (described)",
+        year: 1861,
+        location: "Solnhofen Limestone, Bavaria, Germany"
       },
-      fossilLocations: ["morrison"],
+      fossilLocations: ["solnhofen"],
       predators: [],
       prey: [],
       funFacts: [
-        "Over 1,000 Coelophysis specimens were found together at Ghost Ranch, New Mexico.",
-        "A Coelophysis skull was taken to space aboard the Space Shuttle Endeavour.",
-        "Evidence suggests it may have eaten its own young during food shortages.",
-        "It is the state fossil of New Mexico.",
-        "Coelophysis is one of the earliest and longest-lived dinosaur genera known."
+        "Archaeopteryx is one of the most famous transitional fossils linking non-avian dinosaurs and birds.",
+        "Its feathers were asymmetrical — a feature associated with flight in modern birds.",
+        "It retained dinosaur traits like teeth and a long bony tail.",
+        "Most specimens come from the Solnhofen Limestone, which preserves exquisite detail.",
+        "Debate continues over how strong a flier it was — likely best at short bursts rather than long-distance soaring."
       ],
-      notableSpecimens: [],
+      notableSpecimens: [
+        { name: "London specimen", completeness: "Partial skeleton", location: "Natural History Museum, London", year: 1861 }
+      ],
       featured: false,
-      emoji: "🌵",
-      color: "#8b6a30"
+      emoji: "🪶",
+      color: "#4a7c4e"
     },
     {
-      id: "deinonychus",
-      name: { scientific: "Deinonychus antirrhopus", common: "Deinonychus" },
-      pronunciation: "dy-NON-ih-kus",
-      meaningOfName: "Terrible Claw",
+      id: "psittacosaurus",
+      name: { scientific: "Psittacosaurus mongoliensis", common: "Psittacosaurus" },
+      pronunciation: "SIT-ah-ko-SOR-us",
+      meaningOfName: "Parrot Lizard",
       period: "cretaceous",
       subPeriod: "Early Cretaceous",
-      mya: { start: 115, end: 108 },
-      diet: "carnivore",
-      classification: "theropod",
-      subclassification: "Dromaeosauridae",
+      mya: { start: 125, end: 105 },
+      diet: "herbivore",
+      classification: "ceratopsian",
+      subclassification: "Psittacosauridae",
       measurements: {
-        length: { value: 3.4, unit: "m", notes: "3–3.5m" },
-        height: { value: 1.2, unit: "m", notes: "At hip" },
-        weight: { value: 75, unit: "kg", notes: "70–80 kg" },
-        speed: { value: 45, unit: "km/h", notes: "Fast pack hunter" }
+        length: { value: 2, unit: "m", notes: "Typically 1–2m" },
+        height: { value: 0.7, unit: "m", notes: "Estimate" },
+        weight: { value: 20, unit: "kg", notes: "Estimates vary by species" },
+        speed: { value: 20, unit: "km/h", notes: "Likely a quick runner; uncertain" }
       },
-      behavior: "The basis for film Velociraptors. Feathered pack hunter with a lethal sickle claw. Helped trigger the Dinosaur Renaissance by demonstrating active, warm-blooded behavior in dinosaurs.",
-      habitat: "Swamps and floodplains of Early Cretaceous North America",
+      behavior: "Small, beaked ceratopsian. Likely lived in groups; some fossils show adults with juveniles suggesting parental care. Some specimens show tail bristles.",
+      habitat: "Forested river valleys and floodplains of Early Cretaceous Asia",
       locomotion: "bipedal",
-      socialBehavior: "Pack hunting — multiple individuals found with same prey",
+      socialBehavior: "Likely social based on juvenile aggregations",
       discovery: {
-        discoveredBy: "John Ostrom",
-        year: 1964,
-        location: "Cloverly Formation, Montana, USA"
+        discoveredBy: "Henry Fairfield Osborn",
+        year: 1923,
+        location: "Mongolia / northern China"
       },
-      fossilLocations: ["morrison"],
+      fossilLocations: ["liaoning"],
       predators: [],
-      prey: ["tenontosaurus"],
+      prey: [],
       funFacts: [
-        "Deinonychus inspired the 'Dinosaur Renaissance' — showing dinosaurs were active, not sluggish.",
-        "The film Velociraptors in Jurassic Park are actually based on Deinonychus.",
-        "It used its sickle claw to restrain, not slash, its prey.",
-        "Deinonychus was likely feathered based on its close relation to known feathered dromaeosaurs.",
-        "John Ostrom's study of Deinonychus revolutionised our understanding of all dinosaurs."
+        "Psittacosaurus is one of the most commonly found dinosaurs in Early Cretaceous Asia, with many specimens discovered.",
+        "It had a powerful parrot-like beak for cropping tough vegetation.",
+        "Some specimens preserve long bristle-like structures on the tail.",
+        "A famous fossil preserves an adult surrounded by juveniles — possible evidence of parental care.",
+        "It represents an early branch of ceratopsians, long before Triceratops evolved."
       ],
       notableSpecimens: [],
       featured: false,
-      emoji: "⚔️",
-      color: "#6b3020"
+      emoji: "🦜",
+      color: "#5a3a8c"
     }
   ]
 };
 
-// ─── HELPER FUNCTIONS ────────────────────────────────────────────────────
-DINOBASE.getById = (id) => DINOBASE.dinosaurs.find(d => d.id === id);
-DINOBASE.getFeatured = () => DINOBASE.dinosaurs.filter(d => d.featured);
-DINOBASE.getByPeriod = (p) => DINOBASE.dinosaurs.filter(d => d.period === p);
-DINOBASE.getByDiet = (diet) => DINOBASE.dinosaurs.filter(d => d.diet === diet);
-DINOBASE.getByClassification = (c) => DINOBASE.dinosaurs.filter(d => d.classification === c);
+// ─── HELPERS + INDEXES (fast lookups for 100s+ entries) ──────────────────
+
+// Size category used by filters: small (<5m), medium (5–15m), large (>15m)
 DINOBASE.getSizeCategory = (dino) => {
-  const l = dino.measurements.length.value;
-  if (l < 5) return "small";
-  if (l <= 15) return "medium";
+  const lengthM = dino?.size?.lengthM ?? dino?.measurements?.length?.value;
+  if (typeof lengthM !== "number") return null;
+  if (lengthM < 5) return "small";
+  if (lengthM <= 15) return "medium";
   return "large";
 };
+
 DINOBASE.formatWeight = (kg) => {
-  if (kg >= 1000) return `${(kg/1000).toFixed(1)} tonnes`;
+  if (typeof kg !== "number") return "—";
+  if (kg >= 1000) return `${(kg / 1000).toFixed(1)} tonnes`;
   return `${kg} kg`;
 };
-DINOBASE.formatLength = (m) => `${m} m`;
+
+DINOBASE.formatLength = (m) => {
+  if (typeof m !== "number") return "—";
+  return `${m} m`;
+};
+
+// Ensure each record includes required keys: facts + size
+DINOBASE.normalizeDinosaurs = () => {
+  for (const dino of DINOBASE.dinosaurs) {
+    if (!dino || typeof dino !== "object") continue;
+
+    // Canonical species facts field
+    if (!Array.isArray(dino.facts) && Array.isArray(dino.funFacts)) dino.facts = dino.funFacts;
+    if (!Array.isArray(dino.funFacts) && Array.isArray(dino.facts)) dino.funFacts = dino.facts;
+
+    // Canonical size field (derived from measurements)
+    const lengthM = dino?.measurements?.length?.value;
+    const heightM = dino?.measurements?.height?.value;
+    const weightKg = dino?.measurements?.weight?.value;
+
+    if (!dino.size || typeof dino.size !== "object") dino.size = {};
+    if (typeof dino.size.lengthM !== "number" && typeof lengthM === "number") dino.size.lengthM = lengthM;
+    if (typeof dino.size.heightM !== "number" && typeof heightM === "number") dino.size.heightM = heightM;
+    if (typeof dino.size.weightKg !== "number" && typeof weightKg === "number") dino.size.weightKg = weightKg;
+    if (typeof dino.size.category !== "string") dino.size.category = DINOBASE.getSizeCategory(dino);
+  }
+};
+
+// Indexes for fast lookups and filtering
+DINOBASE.buildIndexes = () => {
+  const byId = Object.create(null);
+  const byPeriod = Object.create(null);
+  const byDiet = Object.create(null);
+  const byClassification = Object.create(null);
+  const bySize = Object.create(null);
+
+  const add = (index, key, value) => {
+    if (!key) return;
+    if (!index[key]) index[key] = [];
+    index[key].push(value);
+  };
+
+  for (const dino of DINOBASE.dinosaurs) {
+    if (!dino?.id) continue;
+    byId[dino.id] = dino;
+    add(byPeriod, dino.period, dino);
+    add(byDiet, dino.diet, dino);
+    add(byClassification, dino.classification, dino);
+    add(bySize, dino.size?.category ?? DINOBASE.getSizeCategory(dino), dino);
+  }
+
+  DINOBASE.indexes = { byId, byPeriod, byDiet, byClassification, bySize };
+  return DINOBASE.indexes;
+};
+
+DINOBASE.reindex = () => {
+  DINOBASE.normalizeDinosaurs();
+  return DINOBASE.buildIndexes();
+};
+
+// Query helpers (use indexes when present)
+DINOBASE.getById = (id) => DINOBASE.indexes?.byId?.[id] ?? DINOBASE.dinosaurs.find(d => d.id === id);
+DINOBASE.getFeatured = () => DINOBASE.dinosaurs.filter(d => d.featured);
+DINOBASE.getByPeriod = (p) => (DINOBASE.indexes?.byPeriod?.[p] ?? DINOBASE.dinosaurs.filter(d => d.period === p)).slice();
+DINOBASE.getByDiet = (diet) => (DINOBASE.indexes?.byDiet?.[diet] ?? DINOBASE.dinosaurs.filter(d => d.diet === diet)).slice();
+DINOBASE.getByClassification = (c) => (DINOBASE.indexes?.byClassification?.[c] ?? DINOBASE.dinosaurs.filter(d => d.classification === c)).slice();
+DINOBASE.getBySize = (sizeCategory) => (DINOBASE.indexes?.bySize?.[sizeCategory] ?? DINOBASE.dinosaurs.filter(d => DINOBASE.getSizeCategory(d) === sizeCategory)).slice();
+
+// Build derived fields + indexes on load
+DINOBASE.reindex();
