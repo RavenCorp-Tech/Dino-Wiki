@@ -3,9 +3,13 @@
 
   const state = {
     dinosaurs: [],
+    currentResults: [],
+    visibleCount: 0,
+    pageSize: 36,
     activePage: "home",
     lastPage: "encyclopedia",
-    mapPeriod: "all"
+    mapPeriod: "all",
+    dataLoaded: false
   };
 
   const dom = {};
@@ -59,6 +63,8 @@
     dom.tickerContent = qs("#tickerContent");
     dom.dinoGrid = qs("#dinoGrid");
     dom.resultsCount = qs("#resultsCount");
+    dom.dinoGridArea = qs(".dino-grid-area");
+    dom.loadMore = qs("#loadMoreDinosaurs");
     dom.filterSearch = qs("#filterSearch");
     dom.filterReset = qs("#filterReset");
     dom.sortSelect = qs("#sortSelect");
@@ -80,14 +86,16 @@
     dom.particleCanvas = qs("#particleCanvas");
   };
 
-  const init = () => {
+  const init = async () => {
     if (!window.DINOBASE || !Array.isArray(window.DINOBASE.dinosaurs)) {
       console.error("DinoBase data layer is missing.");
       return;
     }
 
+    await loadDinosaurDataModules();
     DINOBASE.reindex?.();
     state.dinosaurs = DINOBASE.dinosaurs.slice();
+    state.dataLoaded = true;
     cacheDom();
 
     initNavigation();
@@ -104,6 +112,31 @@
     navigateTo(location.hash.replace("#", "") || "home", { skipHash: true, skipScroll: true });
     animateStats();
   };
+
+  const loadDinosaurDataModules = async () => {
+    if (DINOBASE.modulesLoaded) return;
+    const modules = Array.isArray(DINOBASE.dataModules) ? DINOBASE.dataModules : [];
+    for (const modulePath of modules) {
+      await loadScript(modulePath);
+    }
+    DINOBASE.mergeDataParts?.();
+    DINOBASE.modulesLoaded = true;
+  };
+
+  const loadScript = (src) => new Promise((resolve, reject) => {
+    if (document.querySelector(`script[data-dinobase-module="${src}"]`)) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    script.dataset.dinobaseModule = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load dinosaur data module: ${src}`));
+    document.head.appendChild(script);
+  });
 
   const initNavigation = () => {
     [...dom.navLinks, ...dom.drawerLinks].forEach((link) => {
@@ -226,6 +259,8 @@
     dom.gridView?.addEventListener("click", () => setViewMode("grid"));
     dom.listView?.addEventListener("click", () => setViewMode("list"));
     dom.dinoGrid.addEventListener("click", handleCardClick);
+    ensureLoadMoreButton();
+    dom.loadMore?.addEventListener("click", loadMoreDinosaurs);
     updatePeriodCounts();
     renderDinosaurs(state.dinosaurs);
   };
@@ -269,11 +304,42 @@
 
   const renderDinosaurs = (items = state.dinosaurs) => {
     if (!dom.dinoGrid) return;
-    dom.resultsCount && (dom.resultsCount.textContent = `Showing ${items.length} of ${state.dinosaurs.length} species`);
-    dom.dinoGrid.innerHTML = items.length
-      ? items.map(renderDinoCard).join("")
+    state.currentResults = items.slice();
+    state.visibleCount = Math.min(state.pageSize, state.currentResults.length);
+    renderVisibleDinosaurs();
+  };
+
+  const renderVisibleDinosaurs = () => {
+    const visibleItems = state.currentResults.slice(0, state.visibleCount);
+    if (dom.resultsCount) {
+      dom.resultsCount.textContent = `Showing ${visibleItems.length} of ${state.currentResults.length} genera`;
+    }
+    dom.dinoGrid.innerHTML = visibleItems.length
+      ? visibleItems.map(renderDinoCard).join("")
       : `<div class="dino-empty-state">No species match the current filters.</div>`;
     revealCards(dom.dinoGrid);
+    updateLoadMoreButton();
+  };
+
+  const ensureLoadMoreButton = () => {
+    if (dom.loadMore || !dom.dinoGridArea) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "load-more-wrap";
+    wrapper.innerHTML = `<button class="btn-outline load-more-btn" id="loadMoreDinosaurs" type="button">Load More Genera</button>`;
+    dom.dinoGridArea.appendChild(wrapper);
+    dom.loadMore = qs("#loadMoreDinosaurs");
+  };
+
+  const updateLoadMoreButton = () => {
+    if (!dom.loadMore) return;
+    const remaining = state.currentResults.length - state.visibleCount;
+    dom.loadMore.hidden = remaining <= 0;
+    dom.loadMore.textContent = remaining > 0 ? `Load More Genera (${remaining} remaining)` : "All Genera Loaded";
+  };
+
+  const loadMoreDinosaurs = () => {
+    state.visibleCount = Math.min(state.visibleCount + state.pageSize, state.currentResults.length);
+    renderVisibleDinosaurs();
   };
 
   const renderDinoCard = (dino) => `

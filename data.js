@@ -1131,6 +1131,30 @@ DINOBASE.reindex = function () {
   const getLength = (dino) => dino?.size?.lengthM ?? dino?.measurements?.length?.value;
   const getWeight = (dino) => dino?.size?.weightKg ?? dino?.measurements?.weight?.value;
 
+  DINOBASE.dataModules = [
+    "data/dinosaurs-core-expansion.js",
+    "data/dinosaurs-modern-expansion.js"
+  ];
+
+  DINOBASE.dataParts = [];
+  DINOBASE.modulesLoaded = false;
+
+  DINOBASE.registerDataPart = (part) => {
+    if (!part || !Array.isArray(part.dinosaurs)) return;
+    DINOBASE.dataParts.push(part);
+  };
+
+  DINOBASE.mergeDataParts = () => {
+    const seen = new Set(DINOBASE.dinosaurs.map((dino) => dino.id));
+    DINOBASE.dataParts.forEach((part) => {
+      part.dinosaurs.forEach((dino) => {
+        if (!dino?.id || seen.has(dino.id)) return;
+        seen.add(dino.id);
+        DINOBASE.dinosaurs.push(dino);
+      });
+    });
+  };
+
   DINOBASE.getSizeCategory = (dino) => {
     const lengthM = getLength(dino);
     if (typeof lengthM !== "number") return null;
