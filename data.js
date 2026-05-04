@@ -1124,3 +1124,91 @@ DINOBASE.reindex = function () {
     this.index[d.id] = d;
   });
 };
+
+// Final browser facade used by app.js. Kept at the end so it wins over any
+// legacy helper definitions above while preserving the full dataset unchanged.
+(() => {
+  const getLength = (dino) => dino?.size?.lengthM ?? dino?.measurements?.length?.value;
+  const getWeight = (dino) => dino?.size?.weightKg ?? dino?.measurements?.weight?.value;
+
+  DINOBASE.getSizeCategory = (dino) => {
+    const lengthM = getLength(dino);
+    if (typeof lengthM !== "number") return null;
+    if (lengthM < 5) return "small";
+    if (lengthM <= 15) return "medium";
+    return "large";
+  };
+
+  DINOBASE.formatLength = (meters) => {
+    if (typeof meters !== "number") return "N/A";
+    return `${meters.toLocaleString(undefined, { maximumFractionDigits: 1 })} m`;
+  };
+
+  DINOBASE.formatWeight = (kg) => {
+    if (typeof kg !== "number") return "N/A";
+    if (kg >= 1000) {
+      return `${(kg / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })} tonnes`;
+    }
+    return `${kg.toLocaleString()} kg`;
+  };
+
+  DINOBASE.normalizeDinosaurs = () => {
+    DINOBASE.dinosaurs.forEach((dino) => {
+      if (!dino || typeof dino !== "object") return;
+      if (!Array.isArray(dino.facts) && Array.isArray(dino.funFacts)) dino.facts = dino.funFacts;
+      if (!Array.isArray(dino.funFacts) && Array.isArray(dino.facts)) dino.funFacts = dino.facts;
+
+      dino.size = dino.size && typeof dino.size === "object" ? dino.size : {};
+      const lengthM = dino?.measurements?.length?.value;
+      const heightM = dino?.measurements?.height?.value;
+      const weightKg = dino?.measurements?.weight?.value;
+      if (typeof lengthM === "number") dino.size.lengthM = lengthM;
+      if (typeof heightM === "number") dino.size.heightM = heightM;
+      if (typeof weightKg === "number") dino.size.weightKg = weightKg;
+      dino.size.category = DINOBASE.getSizeCategory(dino);
+    });
+  };
+
+  DINOBASE.buildIndexes = () => {
+    const indexes = {
+      byId: Object.create(null),
+      byPeriod: Object.create(null),
+      byDiet: Object.create(null),
+      byClassification: Object.create(null),
+      bySize: Object.create(null)
+    };
+
+    const add = (bucket, key, dino) => {
+      if (!key) return;
+      indexes[bucket][key] ||= [];
+      indexes[bucket][key].push(dino);
+    };
+
+    DINOBASE.dinosaurs.forEach((dino) => {
+      if (!dino?.id) return;
+      indexes.byId[dino.id] = dino;
+      add("byPeriod", dino.period, dino);
+      add("byDiet", dino.diet, dino);
+      add("byClassification", dino.classification, dino);
+      add("bySize", dino.size?.category || DINOBASE.getSizeCategory(dino), dino);
+    });
+
+    DINOBASE.indexes = indexes;
+    return indexes;
+  };
+
+  DINOBASE.reindex = () => {
+    DINOBASE.normalizeDinosaurs();
+    return DINOBASE.buildIndexes();
+  };
+
+  DINOBASE.getById = (id) => DINOBASE.indexes?.byId?.[id] || DINOBASE.dinosaurs.find((dino) => dino.id === id) || null;
+  DINOBASE.getFeatured = () => DINOBASE.dinosaurs.filter((dino) => dino.featured).slice();
+  DINOBASE.getByPeriod = (period) => (DINOBASE.indexes?.byPeriod?.[period] || []).slice();
+  DINOBASE.getByDiet = (diet) => (DINOBASE.indexes?.byDiet?.[diet] || []).slice();
+  DINOBASE.getByClassification = (classification) => (DINOBASE.indexes?.byClassification?.[classification] || []).slice();
+  DINOBASE.getBySize = (size) => (DINOBASE.indexes?.bySize?.[size] || []).slice();
+
+  DINOBASE.reindex();
+  window.DINOBASE = DINOBASE;
+})();
