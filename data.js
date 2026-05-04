@@ -1133,7 +1133,9 @@ DINOBASE.reindex = function () {
 
   DINOBASE.dataModules = [
     "data/dinosaurs-core-expansion.js",
-    "data/dinosaurs-modern-expansion.js"
+    "data/dinosaurs-modern-expansion.js",
+    "data/dinosaurs-batch-2.js",
+    "data/dinosaurs-batch-3.js"
   ];
 
   DINOBASE.dataParts = [];
