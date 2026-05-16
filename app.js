@@ -9,7 +9,10 @@
     activePage: "home",
     lastPage: "encyclopedia",
     mapPeriod: "all",
-    dataLoaded: false
+    dataLoaded: false,
+    theme: "dark",
+    leafletMap: null,
+    leafletLayer: null
   };
 
   const dom = {};
@@ -47,6 +50,24 @@
     return `background: radial-gradient(circle at 30% 20%, ${base}55 0%, transparent 55%), linear-gradient(160deg, ${base} 0%, #0a120a 100%);`;
   };
 
+  const assetName = (dino) => {
+    if (dino?.id === "tyrannosaurus-rex") return "Tyrannosaurus-rex";
+    return commonName(dino).replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+  };
+
+  const alternateImageAssets = new Set(["Alioramus", "Pinacosaurus"]);
+
+  const imageCandidates = (dino, includeAlternate = false) => {
+    if (Array.isArray(dino?.images) && dino.images.length) return dino.images;
+    if (dino?.image) return [dino.image];
+    const base = assetName(dino);
+    const images = [`assets/dinosaurs/${base}.png`];
+    if (includeAlternate && alternateImageAssets.has(base)) images.push(`assets/dinosaurs/${base}2.png`);
+    return images;
+  };
+
+  const imageErrorHandler = "this.closest('.dino-card-visual,.detail-visual,.compare-dino-image')?.classList.add('image-missing');this.remove();";
+
   const cacheDom = () => {
     dom.navbar = qs("#navbar");
     dom.navLinks = qsa(".nav-link");
@@ -59,6 +80,7 @@
     dom.searchInput = qs("#searchInput");
     dom.searchResults = qs("#searchResults");
     dom.searchClose = qs("#searchClose");
+    dom.themeToggle = qs("#themeToggle");
     dom.featuredGrid = qs("#featuredGrid");
     dom.tickerContent = qs("#tickerContent");
     dom.dinoGrid = qs("#dinoGrid");
@@ -72,9 +94,9 @@
     dom.listView = qs("#listView");
     dom.detailContainer = qs("#detailContainer");
     dom.timelineContent = qs("#timelineContent");
+    dom.evolutionTree = qs("#evolutionTree");
     dom.mapButtons = qsa(".map-filter-btn");
-    dom.fossilMarkers = qs("#fossilMarkers");
-    dom.mapTooltip = qs("#mapTooltip");
+    dom.leafletMap = qs("#leafletMap");
     dom.mapSpeciesList = qs("#mapSpeciesList");
     dom.selector1 = qs("#selector1");
     dom.selector2 = qs("#selector2");
@@ -92,11 +114,14 @@
       return;
     }
 
+    cacheDom();
+    initTheme();
+    renderSkeletons();
+
     await loadDinosaurDataModules();
     DINOBASE.reindex?.();
     state.dinosaurs = DINOBASE.dinosaurs.slice();
     state.dataLoaded = true;
-    cacheDom();
 
     initNavigation();
     initSearch();
@@ -104,6 +129,7 @@
     initEncyclopedia();
     initDetail();
     initTimeline();
+    initEvolution();
     initMap();
     initCompare();
     initParticles();
@@ -138,6 +164,41 @@
     document.head.appendChild(script);
   });
 
+  const initTheme = () => {
+    const stored = localStorage.getItem("dinobase-theme");
+    const preferred = window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    state.theme = stored || preferred;
+    applyTheme(state.theme);
+    dom.themeToggle?.addEventListener("click", () => {
+      state.theme = state.theme === "light" ? "dark" : "light";
+      localStorage.setItem("dinobase-theme", state.theme);
+      applyTheme(state.theme);
+    });
+  };
+
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    if (dom.themeToggle) {
+      dom.themeToggle.setAttribute("aria-label", theme === "light" ? "Toggle dark theme" : "Toggle light theme");
+      const icon = dom.themeToggle.querySelector(".theme-toggle-icon");
+      if (icon) icon.textContent = theme === "light" ? "☀" : "☾";
+    }
+  };
+
+  const renderSkeletons = () => {
+    if (!dom.dinoGrid) return;
+    dom.dinoGrid.innerHTML = Array.from({ length: 12 }, () => `
+      <article class="dino-card skeleton-card" aria-hidden="true">
+        <div class="dino-card-visual skeleton-block"></div>
+        <div class="dino-card-body">
+          <div class="skeleton-line wide"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </article>
+    `).join("");
+  };
+
   const initNavigation = () => {
     [...dom.navLinks, ...dom.drawerLinks].forEach((link) => {
       link.addEventListener("click", (event) => {
@@ -171,6 +232,9 @@
     state.activePage = page;
     if (!options.skipHash) history.replaceState(null, "", `#${page}`);
     if (!options.skipScroll) window.scrollTo({ top: 0, behavior: "smooth" });
+    if (page === "map" && state.leafletMap) {
+      setTimeout(() => state.leafletMap.invalidateSize(), 80);
+    }
   };
 
   const initSearch = () => {
@@ -342,23 +406,27 @@
     renderVisibleDinosaurs();
   };
 
-  const renderDinoCard = (dino) => `
-    <article class="dino-card" data-id="${escapeHtml(dino.id)}">
-      <div class="dino-card-visual" style="${visualStyle(dino)}">
-        <span class="dino-card-period-tag period-tag-${escapeHtml(dino.period)}">${escapeHtml(periodLabel(dino.period))}</span>
-        <span class="dino-card-emoji">${escapeHtml(dino.emoji || "")}</span>
-      </div>
-      <div class="dino-card-body">
-        <div class="dino-card-name">${escapeHtml(commonName(dino))}</div>
-        <div class="dino-card-scientific">${escapeHtml(scientificName(dino))}</div>
-        <div class="dino-card-stats">
-          <span class="dino-stat-pill">Length: ${escapeHtml(DINOBASE.formatLength?.(numberValue(dino, "length")) || "N/A")}</span>
-          <span class="dino-stat-pill">Weight: ${escapeHtml(DINOBASE.formatWeight?.(numberValue(dino, "weight")) || "N/A")}</span>
+  const renderDinoCard = (dino) => {
+    const image = imageCandidates(dino)[0];
+    return `
+      <article class="dino-card" data-id="${escapeHtml(dino.id)}">
+        <div class="dino-card-visual has-image" style="${visualStyle(dino)}">
+          <span class="dino-card-period-tag period-tag-${escapeHtml(dino.period)}">${escapeHtml(periodLabel(dino.period))}</span>
+          <img class="dino-card-img" src="${escapeHtml(image)}" alt="${escapeHtml(commonName(dino))}" loading="lazy" decoding="async" onerror="${imageErrorHandler}">
+          <span class="dino-card-emoji dino-image-fallback">${escapeHtml(dino.emoji || "D")}</span>
         </div>
-        <div class="dino-card-diet diet-${escapeHtml(dino.diet)}">${escapeHtml(dietLabel(dino.diet))}</div>
-      </div>
-    </article>
-  `;
+        <div class="dino-card-body">
+          <div class="dino-card-name">${escapeHtml(commonName(dino))}</div>
+          <div class="dino-card-scientific">${escapeHtml(scientificName(dino))}</div>
+          <div class="dino-card-stats">
+            <span class="dino-stat-pill">Length: ${escapeHtml(DINOBASE.formatLength?.(numberValue(dino, "length")) || "N/A")}</span>
+            <span class="dino-stat-pill">Weight: ${escapeHtml(DINOBASE.formatWeight?.(numberValue(dino, "weight")) || "N/A")}</span>
+          </div>
+          <div class="dino-card-diet diet-${escapeHtml(dino.diet)}">${escapeHtml(dietLabel(dino.diet))}</div>
+        </div>
+      </article>
+    `;
+  };
 
   const revealCards = (root) => {
     qsa(".dino-card", root).forEach((card, index) => {
@@ -415,13 +483,15 @@
       : "Discovery details unavailable.";
     const mya = dino.mya?.start && dino.mya?.end ? `${dino.mya.start} - ${dino.mya.end} Mya` : "Unknown";
     const size = capitalize(DINOBASE.getSizeCategory?.(dino) || dino.size?.category || "unknown");
+    const gallery = imageCandidates(dino, true);
 
     return `
       <div class="detail-back">Back to ${escapeHtml(capitalize(state.lastPage || "encyclopedia"))}</div>
       <div class="detail-hero">
-        <div class="detail-visual" style="${visualStyle(dino)}">
+        <div class="detail-visual has-image ${gallery.length > 1 ? "has-slideshow" : ""}" style="${visualStyle(dino)}">
           <span class="dino-card-period-tag period-tag-${escapeHtml(dino.period)}">${escapeHtml(periodLabel(dino.period))}</span>
-          <span>${escapeHtml(dino.emoji || "")}</span>
+          ${gallery.map((src, index) => `<img class="detail-img slide-${index + 1}" src="${escapeHtml(src)}" alt="${escapeHtml(commonName(dino))}" loading="eager" decoding="async" onerror="${imageErrorHandler}">`).join("")}
+          <span class="detail-image-fallback">${escapeHtml(dino.emoji || "D")}</span>
         </div>
         <div class="detail-info">
           <div class="detail-eyebrow">
@@ -583,8 +653,69 @@
     </div>
   ` : "";
 
+  const initEvolution = () => {
+    if (!dom.evolutionTree) return;
+    renderEvolutionTree();
+    dom.evolutionTree.addEventListener("click", (event) => {
+      const chip = event.target.closest(".evolution-chip[data-id]");
+      if (chip) openDetail(chip.dataset.id);
+    });
+  };
+
+  const renderEvolutionTree = () => {
+    const groups = [
+      {
+        label: "Saurischia",
+        note: "Lizard-hipped lineages",
+        branches: [
+          { label: "Theropoda", classes: ["theropod", "spinosaur"], accent: "carnivore" },
+          { label: "Sauropodomorpha", classes: ["sauropod"], accent: "herbivore" }
+        ]
+      },
+      {
+        label: "Ornithischia",
+        note: "Bird-hipped herbivore lineages",
+        branches: [
+          { label: "Ceratopsia", classes: ["ceratopsian"], accent: "cretaceous" },
+          { label: "Thyreophora", classes: ["ankylosaur", "stegosaur"], accent: "jurassic" },
+          { label: "Ornithopoda", classes: ["ornithopod"], accent: "herbivore" }
+        ]
+      }
+    ];
+
+    dom.evolutionTree.innerHTML = groups.map((group) => `
+      <section class="evolution-root">
+        <div class="evolution-root-head">
+          <span class="evolution-node-dot"></span>
+          <div>
+            <h2>${escapeHtml(group.label)}</h2>
+            <p>${escapeHtml(group.note)}</p>
+          </div>
+        </div>
+        <div class="evolution-branches">
+          ${group.branches.map((branch) => {
+            const dinos = state.dinosaurs
+              .filter((dino) => branch.classes.includes(dino.classification))
+              .sort((a, b) => (periodOrder[a.period] ?? 99) - (periodOrder[b.period] ?? 99) || commonName(a).localeCompare(commonName(b)))
+              .slice(0, 18);
+            return `
+              <article class="evolution-branch accent-${escapeHtml(branch.accent)}">
+                <div class="evolution-branch-title">${escapeHtml(branch.label)}</div>
+                <div class="evolution-branch-meta">${dinos.length} representative genera</div>
+                <div class="evolution-chip-row">
+                  ${dinos.map((dino) => `<button class="evolution-chip period-tag-${escapeHtml(dino.period)}" data-id="${escapeHtml(dino.id)}">${escapeHtml(commonName(dino))}</button>`).join("")}
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </section>
+    `).join("");
+  };
+
   const initMap = () => {
-    if (!dom.fossilMarkers) return;
+    if (!dom.leafletMap) return;
+    initLeafletMap();
     renderMapMarkers("all");
     dom.mapButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -595,21 +726,43 @@
     });
   };
 
+  const initLeafletMap = () => {
+    if (state.leafletMap || !window.L) return;
+    state.leafletMap = L.map(dom.leafletMap, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+      worldCopyJump: true
+    }).setView([22, 20], 2);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 6,
+      minZoom: 2,
+      attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(state.leafletMap);
+
+    state.leafletLayer = L.layerGroup().addTo(state.leafletMap);
+  };
+
   const renderMapMarkers = (period) => {
     state.mapPeriod = period;
     const sites = (DINOBASE.fossilSites || []).filter((site) => period === "all" || site.period === period);
-    dom.fossilMarkers.innerHTML = sites.map((site) => `
-      <g class="fossil-marker marker-${escapeHtml(site.period)}" data-site="${escapeHtml(site.id)}" transform="translate(${Number(site.cx) || 0} ${Number(site.cy) || 0})">
-        <circle r="12"></circle>
-        <circle r="5"></circle>
-      </g>
-    `).join("");
-
-    qsa(".fossil-marker", dom.fossilMarkers).forEach((marker) => {
-      marker.addEventListener("mouseenter", showMapTooltip);
-      marker.addEventListener("mouseleave", hideMapTooltip);
-      marker.addEventListener("click", () => renderMapSpecies(marker.dataset.site));
-    });
+    if (state.leafletLayer && window.L) {
+      state.leafletLayer.clearLayers();
+      sites.forEach((site) => {
+        const coords = siteCoordinates(site);
+        if (!coords) return;
+        const marker = L.circleMarker(coords, {
+          radius: 9,
+          weight: 2,
+          color: periodColor(site.period),
+          fillColor: periodColor(site.period),
+          fillOpacity: 0.72
+        }).addTo(state.leafletLayer);
+        marker.bindPopup(`<strong>${escapeHtml(site.name)}</strong><br>${escapeHtml(site.country)}<br>${escapeHtml(periodLabel(site.period))}`);
+        marker.on("click", () => renderMapSpecies(site.id));
+      });
+      setTimeout(() => state.leafletMap?.invalidateSize(), 60);
+    }
 
     if (dom.mapSpeciesList) {
       dom.mapSpeciesList.innerHTML = `<p class="map-hint">Click a marker to see species found at that location</p>`;
@@ -618,18 +771,24 @@
 
   const siteById = (id) => (DINOBASE.fossilSites || []).find((site) => site.id === id);
 
-  const showMapTooltip = (event) => {
-    const site = siteById(event.currentTarget.dataset.site);
-    if (!site || !dom.mapTooltip) return;
-    dom.mapTooltip.innerHTML = `<strong>${escapeHtml(site.name)}</strong><br>${escapeHtml(site.country)}`;
-    dom.mapTooltip.style.display = "block";
-    dom.mapTooltip.style.left = `${event.pageX + 14}px`;
-    dom.mapTooltip.style.top = `${event.pageY - 20}px`;
-  };
+  const periodColor = (period) => ({
+    triassic: "#c8743a",
+    jurassic: "#4a8c55",
+    cretaceous: "#7a50c0"
+  })[period] || "#e8a030";
 
-  const hideMapTooltip = () => {
-    if (dom.mapTooltip) dom.mapTooltip.style.display = "none";
-  };
+  const siteCoordinates = (site) => ({
+    "hell-creek": [46.9, -106.0],
+    morrison: [39.1, -108.7],
+    gobi: [43.6, 103.8],
+    patagonia: [-43.2, -68.8],
+    tendaguru: [-9.9, 39.2],
+    sahara: [27.0, 12.0],
+    solnhofen: [48.9, 11.0],
+    liaoning: [41.6, 120.5],
+    "australia-qld": [-22.4, 143.0],
+    "india-dec": [21.2, 79.1]
+  })[site.id] || null;
 
   const renderMapSpecies = (siteId) => {
     const site = siteById(siteId);
@@ -676,7 +835,10 @@
 
     dom.compareCardsRow.innerHTML = [a, b].map((dino) => `
       <div class="compare-dino-card">
-        <div class="compare-dino-emoji">${escapeHtml(dino.emoji || "")}</div>
+        <div class="compare-dino-image" style="${visualStyle(dino)}">
+          <img src="${escapeHtml(imageCandidates(dino)[0])}" alt="${escapeHtml(commonName(dino))}" loading="lazy" decoding="async" onerror="${imageErrorHandler}">
+          <span>${escapeHtml(dino.emoji || "D")}</span>
+        </div>
         <div class="compare-dino-name">${escapeHtml(commonName(dino))}</div>
         <div class="compare-dino-sci">${escapeHtml(scientificName(dino))}</div>
         <div class="dino-card-diet diet-${escapeHtml(dino.diet)}">${escapeHtml(dietLabel(dino.diet))}</div>
@@ -696,9 +858,15 @@
       const winner = av === bv ? "" : av > bv ? "a" : "b";
       return `
         <div class="compare-stat-row">
-          <div class="compare-stat-a ${winner === "a" ? "compare-stat-winner-a" : ""}">${av || "N/A"} ${av ? unit : ""}</div>
+          <div class="compare-stat-a ${winner === "a" ? "compare-stat-winner-a" : ""}">
+            <span>${av || "N/A"} ${av ? unit : ""}</span>
+            ${renderCompareBar(av, Math.max(av, bv))}
+          </div>
           <div class="compare-stat-label">${label}</div>
-          <div class="compare-stat-b ${winner === "b" ? "compare-stat-winner-b" : ""}">${bv || "N/A"} ${bv ? unit : ""}</div>
+          <div class="compare-stat-b ${winner === "b" ? "compare-stat-winner-b" : ""}">
+            <span>${bv || "N/A"} ${bv ? unit : ""}</span>
+            ${renderCompareBar(bv, Math.max(av, bv))}
+          </div>
         </div>
       `;
     }).join("");
@@ -706,7 +874,20 @@
     const scoreA = numberValue(a, "length") + numberValue(a, "height") + (numberValue(a, "weight") / 1000) + numberValue(a, "speed");
     const scoreB = numberValue(b, "length") + numberValue(b, "height") + (numberValue(b, "weight") / 1000) + numberValue(b, "speed");
     const bigger = scoreA === scoreB ? "It is a close match." : `${escapeHtml(commonName(scoreA > scoreB ? a : b))} has the stronger overall physical profile.`;
-    dom.compareWinner.innerHTML = `<h3>Comparison Summary</h3><p>${bigger}</p>`;
+    dom.compareWinner.innerHTML = `
+      <h3>Comparison Summary</h3>
+      <p>${bigger}</p>
+      <div class="compare-insights">
+        <span>${escapeHtml(periodLabel(a.period))} vs ${escapeHtml(periodLabel(b.period))}</span>
+        <span>${escapeHtml(dietLabel(a.diet))} vs ${escapeHtml(dietLabel(b.diet))}</span>
+        <span>${escapeHtml(capitalize(a.classification))} vs ${escapeHtml(capitalize(b.classification))}</span>
+      </div>
+    `;
+  };
+
+  const renderCompareBar = (value, max) => {
+    const width = max ? Math.max(8, Math.round((value / max) * 100)) : 0;
+    return `<div class="compare-bar"><span style="width:${width}%"></span></div>`;
   };
 
   const resetFilters = () => {
