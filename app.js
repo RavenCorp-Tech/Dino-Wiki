@@ -180,6 +180,7 @@
     document.documentElement.dataset.theme = theme;
     if (dom.themeToggle) {
       dom.themeToggle.setAttribute("aria-label", theme === "light" ? "Toggle dark theme" : "Toggle light theme");
+      dom.themeToggle.setAttribute("aria-pressed", String(theme === "light"));
       const icon = dom.themeToggle.querySelector(".theme-toggle-icon");
       if (icon) icon.textContent = theme === "light" ? "☀" : "☾";
     }
@@ -306,6 +307,18 @@
     }
 
     updateDietCounts();
+    updateHeroStats();
+  };
+
+  const updateHeroStats = () => {
+    const stats = qsa(".hero-stat .stat-number");
+    if (!stats.length) return;
+    if (stats[0]) stats[0].dataset.target = String(state.dinosaurs.length);
+    if (stats[1]) stats[1].dataset.target = "3";
+    if (stats[2]) {
+      const countries = new Set((DINOBASE.fossilSites || []).map((site) => site.country).filter(Boolean));
+      stats[2].dataset.target = String(countries.size || 7);
+    }
   };
 
   const renderFeatured = () => {
@@ -727,7 +740,11 @@
   };
 
   const initLeafletMap = () => {
-    if (state.leafletMap || !window.L) return;
+    if (state.leafletMap || !dom.leafletMap) return;
+    if (!window.L) {
+      dom.leafletMap.classList.add("map-fallback");
+      return;
+    }
     state.leafletMap = L.map(dom.leafletMap, {
       zoomControl: true,
       scrollWheelZoom: false,
@@ -747,6 +764,7 @@
     state.mapPeriod = period;
     const sites = (DINOBASE.fossilSites || []).filter((site) => period === "all" || site.period === period);
     if (state.leafletLayer && window.L) {
+      dom.leafletMap?.classList.remove("map-fallback");
       state.leafletLayer.clearLayers();
       sites.forEach((site) => {
         const coords = siteCoordinates(site);
@@ -762,11 +780,31 @@
         marker.on("click", () => renderMapSpecies(site.id));
       });
       setTimeout(() => state.leafletMap?.invalidateSize(), 60);
+    } else {
+      renderMapFallback(sites);
     }
 
     if (dom.mapSpeciesList) {
       dom.mapSpeciesList.innerHTML = `<p class="map-hint">Click a marker to see species found at that location</p>`;
     }
+  };
+
+  const renderMapFallback = (sites) => {
+    if (!dom.leafletMap) return;
+    dom.leafletMap.classList.add("map-fallback");
+    dom.leafletMap.innerHTML = `
+      <div class="map-fallback-grid" role="list" aria-label="Fossil discovery sites">
+        ${sites.map((site) => `
+          <button class="map-site-button" type="button" data-site="${escapeHtml(site.id)}" role="listitem">
+            <span class="map-site-name">${escapeHtml(site.name)}</span>
+            <span class="map-site-meta">${escapeHtml(site.country)} - ${escapeHtml(periodLabel(site.period))}</span>
+          </button>
+        `).join("")}
+      </div>
+    `;
+    qsa(".map-site-button", dom.leafletMap).forEach((button) => {
+      button.addEventListener("click", () => renderMapSpecies(button.dataset.site));
+    });
   };
 
   const siteById = (id) => (DINOBASE.fossilSites || []).find((site) => site.id === id);
@@ -1002,7 +1040,9 @@
     };
     const draw = () => {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.fillStyle = "rgba(233, 203, 143, 0.22)";
+      context.fillStyle = document.documentElement.dataset.theme === "light"
+        ? "rgba(115, 86, 38, 0.16)"
+        : "rgba(233, 203, 143, 0.22)";
       particles.forEach((p) => {
         p.x = (p.x + p.vx + 1) % 1;
         p.y = (p.y + p.vy) % 1;
